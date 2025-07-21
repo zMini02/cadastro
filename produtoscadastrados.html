@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cadastro de Sorvetes - Acaiteria</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 2rem;
+            color: #222;
+        }
+        h1 {
+            color: #4a148c;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        section {
+            max-width: 600px;
+            margin: 1rem auto 2rem auto;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(74, 20, 140, 0.2);
+        }
+        form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        input[type="text"], input[type="number"] {
+            flex: 1 1 150px;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #4a148c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #6a1b9a;
+        }
+        ul {
+            margin-top: 1rem;
+            padding-left: 1.2rem;
+        }
+        ul li {
+            margin-bottom: 0.3rem;
+            font-size: 1rem;
+        }
+        /* Sidebar styles */
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            background-color: #4a148c;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+            color: white;
+        }
+        #sidebar a {
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            color: white;
+            display: block;
+            transition: 0.3s;
+        }
+        #sidebar a:hover {
+            background-color: #6a1b9a;
+        }
+        #sidebar .closebtn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        /* Open sidebar button */
+        #openSidebarBtn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background-color: #4a148c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 1rem;
+        }
+        /* Responsive adjustments */
+        @media (min-width: 600px) {
+            #openSidebarBtn {
+                display: none;
+            }
+            #sidebar {
+                width: 200px;
+                padding-top: 20px;
+            }
+            body {
+                margin-left: 200px;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="openSidebarBtn">&#9776; Menu</button>
+
+    <div id="sidebar">
+        <span class="closebtn" id="closeSidebarBtn">&times;</span>
+        <a href="cadastrocardapio.html">Cadastrar Açaís</a>
+        <a href="cadastrosorvete.html">Cadastrar Sorvetes</a>
+        <a href="cadastraroutros.html">Cadastrar Outros</a>
+        <a href="">Produtos cadastrados
+        
+        </a>
+    </div>
+
+    <h1>Cadastro de Sorvetes - Acaiteria</h1>
+
+
+    <section id="coberturas-section">
+        <h2>Coberturas</h2>
+        <ul id="coberturas-list"></ul>
+    </section>
+
+    <section id="complementos-section">
+        <h2>Complementos</h2>
+        <ul id="complementos-list"></ul>
+    </section>
+
+    <section id="creme-section">
+        <h2>Creme</h2>
+        <ul id="creme-list"></ul>
+    </section>
+
+    <section id="frutas-section">
+        <h2>Frutas</h2>
+        <ul id="frutas-list"></ul>
+    </section>
+
+    <section id="sorvete-section">
+        <h2>Sorvete</h2>
+        <ul id="sorvete-list"></ul>
+    </section>
+
+    <section id="tamanhos-section">
+        <h2>Tamanhos</h2>
+        <ul id="tamanhos-list"></ul>
+    </section>
+
+    <script>
+        async function postToFirebase(url, data) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    throw new Error('Erro ao enviar dados para o Firebase');
+                }
+                return await response.json();
+            } catch (error) {
+                alert(error.message);
+                return null;
+            }
+        }
+
+        function addItem(formId, nameInputId, priceInputId, listId, firebaseUrl) {
+            const form = document.getElementById(formId);
+            const nameInput = document.getElementById(nameInputId);
+            const priceInput = document.getElementById(priceInputId);
+            const list = document.getElementById(listId);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = nameInput.value.trim();
+                const price = parseFloat(priceInput.value).toFixed(2);
+
+                if (name && !isNaN(price)) {
+                    const data = { name: name, price: parseFloat(price) };
+                    const result = await postToFirebase(firebaseUrl, data);
+                    if (result) {
+                        const li = document.createElement('li');
+                        li.textContent = `${name} - R$ ${price.replace('.', ',')}`;
+                        list.appendChild(li);
+
+                        nameInput.value = '';
+                        priceInput.value = '';
+                    }
+                }
+            });
+        }
+
+
+        function editItem(category, key, item) {
+            const name = prompt('Editar nome:', item.name);
+            if (name === null) return; // Cancelled
+            let price = item.price;
+            if (price !== undefined) {
+                const priceInput = prompt('Editar preço:', price.toFixed(2).replace('.', ','));
+                if (priceInput === null) return; // Cancelled
+                price = parseFloat(priceInput.replace(',', '.'));
+                if (isNaN(price)) {
+                    alert('Preço inválido');
+                    return;
+                }
+            }
+            const updatedData = price !== undefined ? { name: name, price: price } : { name: name };
+            fetch(`https://digitalizacaodb-default-rtdb.firebaseio.com/${category}/${key}.json`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao atualizar item');
+                }
+                // Refresh the list after update
+                fetchAndDisplay(`https://digitalizacaodb-default-rtdb.firebaseio.com/${category}.json`, `${category}-list`, category);
+            })
+            .catch(error => alert(error.message));
+        }
+
+        function deleteItem(category, key) {
+            if (!confirm('Tem certeza que deseja excluir este item?')) return;
+            fetch(`https://digitalizacaodb-default-rtdb.firebaseio.com/${category}/${key}.json`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao excluir item');
+                }
+                // Refresh the list after deletion
+                fetchAndDisplay(`https://digitalizacaodb-default-rtdb.firebaseio.com/${category}.json`, `${category}-list`, category);
+            })
+            .catch(error => alert(error.message));
+        }
+
+        function fetchAndDisplay(url, listId, category) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao buscar dados do Firebase');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const list = document.getElementById(listId);
+                    list.innerHTML = ''; // Clear existing list items
+                    if (data) {
+                        Object.entries(data).forEach(([key, item]) => {
+                            const li = document.createElement('li');
+
+                            const textSpan = document.createElement('span');
+                            textSpan.textContent = item.price !== undefined ? `${item.name} - R$ ${item.price.toFixed(2).replace('.', ',')}` : item.name;
+                            li.appendChild(textSpan);
+
+                            // Create Edit button
+                            const editBtn = document.createElement('button');
+                            editBtn.textContent = 'Editar';
+                            editBtn.style.marginLeft = '10px';
+                            editBtn.addEventListener('click', () => {
+                                editItem(category, key, item);
+                            });
+                            li.appendChild(editBtn);
+
+                            // Create Delete button
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.textContent = 'Excluir';
+                            deleteBtn.style.marginLeft = '5px';
+                            deleteBtn.addEventListener('click', () => {
+                                deleteItem(category, key);
+                            });
+                            li.appendChild(deleteBtn);
+
+                            list.appendChild(li);
+                        });
+                    }
+                })
+                .catch(error => alert(error.message));
+        }
+
+        // Fetch and display data for all categories on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/outros.json', 'outros-list', 'outros');
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/coberturas.json', 'coberturas-list', 'coberturas');
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/complementos.json', 'complementos-list', 'complementos');
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/creme.json', 'creme-list', 'creme');
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/frutas.json', 'frutas-list', 'frutas');
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/sorvete.json', 'sorvete-list', 'sorvete');
+            fetchAndDisplay('https://digitalizacaodb-default-rtdb.firebaseio.com/tamanhos.json', 'tamanhos-list', 'tamanhos');
+        });
+
+        // Sidebar toggle script
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        openBtn.addEventListener('click', () => {
+            sidebar.style.width = '200px';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            sidebar.style.width = '0';
+        });
+    </script>
+</body>
+</html>

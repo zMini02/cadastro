@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cadastro de Itens do Cardápio - Acaiteria</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 2rem;
+            color: #222;
+        }
+        h1 {
+            color: #4a148c;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        section {
+            max-width: 600px;
+            margin: 1rem auto 2rem auto;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(74, 20, 140, 0.2);
+        }
+        section h2 {
+            color: #4a148c;
+            margin-top: 0;
+        }
+        form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        input[type="text"], input[type="number"] {
+            flex: 1 1 150px;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #4a148c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #6a1b9a;
+        }
+        ul {
+            margin-top: 1rem;
+            padding-left: 1.2rem;
+        }
+        ul li {
+            margin-bottom: 0.3rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <style>
+        /* Sidebar styles */
+        #sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            background-color: #4a148c;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+            color: white;
+        }
+        #sidebar a {
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            color: white;
+            display: block;
+            transition: 0.3s;
+        }
+        #sidebar a:hover {
+            background-color: #6a1b9a;
+        }
+        #sidebar .closebtn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        /* Open sidebar button */
+        #openSidebarBtn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background-color: #4a148c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 1rem;
+        }
+        /* Responsive adjustments */
+        @media (min-width: 600px) {
+            #openSidebarBtn {
+                display: none;
+            }
+            #sidebar {
+                width: 200px;
+                padding-top: 20px;
+            }
+            body {
+                margin-left: 200px;
+                padding: 2rem;
+            }
+        }
+    </style>
+
+    <button id="openSidebarBtn">&#9776; Menu</button>
+
+    <div id="sidebar">
+        <span class="closebtn" id="closeSidebarBtn">&times;</span>
+        <a href="cadastrocardapio.html">Cadastrar Açaís</a>
+        <a href="cadastrosorvete.html">Cadastrar Sorvetes</a>
+        <a href="cadastraroutros.html">Cadastrar Outros</a>
+        <a href="cadastraroutros.html">Produtos cadastrados
+        
+        </a>
+    </div>
+
+    <h1>Cadastro de Itens do Cardápio - Acaiteria</h1>
+
+    <section id="sizes-section">
+        <h2>Tamanhos</h2>
+        <form id="size-form">
+            <input type="text" id="size-name" placeholder="Nome do tamanho (ex: 300ml)" required />
+            <input type="number" id="size-price" placeholder="Preço (ex: 12.00)" step="0.01" min="0" required />
+            <button type="submit">Adicionar</button>
+        </form>
+        <ul id="sizes-list"></ul>
+    </section>
+
+    <section id="creams-section">
+        <h2>Cremes</h2>
+        <form id="cream-form">
+            <input type="text" id="cream-name" placeholder="Nome do creme (ex: Leite Condensado)" required />
+            <input type="number" id="cream-price" placeholder="Preço (ex: 2.50)" step="0.01" min="0" required />
+            <button type="submit">Adicionar</button>
+        </form>
+        <ul id="creams-list"></ul>
+    </section>
+
+    <section id="fruits-section">
+        <h2>Frutas</h2>
+        <form id="fruit-form">
+            <input type="text" id="fruit-name" placeholder="Nome da fruta (ex: Banana)" required />
+            <input type="number" id="fruit-price" placeholder="Preço (ex: 3.00)" step="0.01" min="0" required />
+            <button type="submit">Adicionar</button>
+        </form>
+        <ul id="fruits-list"></ul>
+    </section>
+
+    <section id="complements-section">
+        <h2>Complementos</h2>
+        <form id="complement-form">
+            <input type="text" id="complement-name" placeholder="Nome do complemento (ex: Granola)" required />
+            <input type="number" id="complement-price" placeholder="Preço (ex: 3.00)" step="0.01" min="0" required />
+            <button type="submit">Adicionar</button>
+        </form>
+        <ul id="complements-list"></ul>
+    </section>
+
+    <section id="syrup-section">
+        <h2>Caldas</h2>
+        <form id="syrup-form">
+            <input type="text" id="syrup-name" placeholder="Nome da calda (ex: Chocolate)" required />
+            <input type="number" id="syrup-price" placeholder="Preço (ex: 2.00)" step="0.01" min="0" required />
+            <button type="submit">Adicionar</button>
+        </form>
+        <ul id="syrup-list"></ul>
+    </section>
+
+    <script>
+        async function postToFirebase(url, data) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    throw new Error('Erro ao enviar dados para o Firebase');
+                }
+                return await response.json();
+            } catch (error) {
+                alert(error.message);
+                return null;
+            }
+        }
+
+        function addItem(formId, nameInputId, priceInputId, listId, firebaseUrl) {
+            const form = document.getElementById(formId);
+            const nameInput = document.getElementById(nameInputId);
+            const priceInput = document.getElementById(priceInputId);
+            const list = document.getElementById(listId);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = nameInput.value.trim();
+                const price = parseFloat(priceInput.value).toFixed(2);
+
+                if (name && !isNaN(price)) {
+                    const data = { name: name, price: parseFloat(price) };
+                    const result = await postToFirebase(firebaseUrl, data);
+                    if (result) {
+                        const li = document.createElement('li');
+                        li.textContent = `${name} - R$ ${price.replace('.', ',')}`;
+                        list.appendChild(li);
+
+                        nameInput.value = '';
+                        priceInput.value = '';
+                    }
+                }
+            });
+        }
+
+        addItem('size-form', 'size-name', 'size-price', 'sizes-list', 'https://digitalizacaodb-default-rtdb.firebaseio.com/tamanhos.json');
+        addItem('cream-form', 'cream-name', 'cream-price', 'creams-list', 'https://digitalizacaodb-default-rtdb.firebaseio.com/creme.json');
+        addItem('fruit-form', 'fruit-name', 'fruit-price', 'fruits-list', 'https://digitalizacaodb-default-rtdb.firebaseio.com/frutas.json');
+        addItem('complement-form', 'complement-name', 'complement-price', 'complements-list', 'https://digitalizacaodb-default-rtdb.firebaseio.com/complementos.json');
+        addItem('syrup-form', 'syrup-name', 'syrup-price', 'syrup-list', 'https://digitalizacaodb-default-rtdb.firebaseio.com/calda.json');
+
+        // Sidebar toggle script
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('sidebar');
+
+        openBtn.addEventListener('click', () => {
+            sidebar.style.width = '200px';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            sidebar.style.width = '0';
+        });
+    </script>
+</body>
+</html>
