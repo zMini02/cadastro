@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="min-h-screen">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Estoque</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #ffffff !important;
+      color: #0000ff !important; /* blue text */
+    }
+    h2, h3, label {
+      color: #ffffff !important; /* blue text */
+    }
+    button, #cartButton, #cancelSellBtn, #finalizeCartBtn, #finalizeSellBtn {
+      background-color: #0000ff !important; /* blue background */
+      color: #ffffff !important; /* white text */
+    }
+    button:hover, #cartButton:hover, #cancelSellBtn:hover, #finalizeCartBtn:hover, #finalizeSellBtn:hover {
+      background-color: #ffffff !important; /* white background */
+      color: #0000ff !important; /* blue text */
+    }
+    input, select, textarea {
+      border-color: #0000ff !important; /* blue border */
+      color: #0000ff !important; /* blue text */
+      background-color: #ffffff !important; /* white background */
+    }
+    .text-blue-500 {
+      color: #0000ff !important; /* blue text */
+    }
+    .bg-blue-600 {
+      background-color: #0000ff !important; /* blue background */
+    }
+    .hover\:bg-blue-700:hover {
+      background-color: #0000cc !important; /* darker blue background */
+      color: #ffffff !important; /* white text */
+    }
+    #stockCards > div {
+      background-color: #0000ff !important; /* blue background for cards */
+      color: #ffffff !important; /* white text for cards */
+    }
+    #cartItems span {
+      color: #0000ff !important; /* blue text */
+    }
+  </style>
+  <link rel="shortcut icon" href="favicongrow.png" type="image/x-icon">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+
+<body class="bg-white min-h-screen flex flex-col">
+  <div class="flex flex-1">
+    <div id="mainContent" class="flex-1 p-4 overflow-auto" style="padding-bottom: 100px;">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex-1 flex justify-center">
+          <img alt="Logo" class="h-10" src="logoprincipal.png" />
+        </div>
+        <div class="flex items-center space-x-4">
+          <i class="fas fa-bell text-blue-500 text-2xl"></i>
+          <i class="fas fa-user-circle text-blue-500 text-2xl"></i>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <input type="text" id="searchInput" placeholder="Pesquisar peças..." class="w-full border border-gray-300 rounded px-3 py-2" />
+      </div>
+
+      <section class="mb-8">
+        <h2 class="text-blue-500 text-2xl font-bold mb-4">Estoque Atual</h2>
+        <div id="stockCards" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="sellModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-auto relative">
+      <h2 class="text-green-600 text-xl font-bold mb-4">Registrar Venda de Acessório</h2>
+      <form id="sellForm" class="space-y-4">
+        <div>
+          <label for="sellQuantity" class="block font-semibold mb-1">Quantidade Retirada:</label>
+          <select id="sellQuantity" required class="w-full border border-gray-300 rounded-md p-2"></select>
+        </div>
+        <div>
+          <label for="sellClient" class="block font-semibold mb-1">Cliente:</label>
+          <input type="text" id="sellClient" required class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="paymentMethod" class="block font-semibold mb-1">Forma de Pagamento:</label>
+          <select id="paymentMethod" required class="w-full border border-gray-300 rounded-md p-2">
+            <option value="" disabled selected>Selecione a forma de pagamento</option>
+            <option value="Pix">Pix</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão">Cartão</option>
+            <option value="Devendo">Devendo</option>
+          </select>
+        </div>
+        <div>
+          <label for="sellUnitPrice" class="block font-semibold mb-1">Valor Unitário (R$):</label>
+          <input type="number" id="sellUnitPrice" min="0" step="0.01" required class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="sellDetails" class="block font-semibold mb-1">Detalhes do Acessório:</label>
+          <textarea id="sellDetails" rows="3" readonly class="w-full border border-gray-300 rounded-md p-2 bg-gray-100"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" id="cancelSellBtn" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400">Cancelar</button>
+          <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Finalizar Venda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFI0ZP912_gq0MVcUMGWTg3kxA6fM7f5A",
+      authDomain: "pedeja-db.firebaseapp.com",
+      databaseURL: "https://pedeja-db-default-rtdb.firebaseio.com",
+      projectId: "pedeja-db",
+      storageBucket: "pedeja-db.firebasestorage.app",
+      messagingSenderId: "242483912567",
+      appId: "1:242483912567:web:8a9f216dcd3f0819b38b72",
+      measurementId: "G-J7YC29RBZW"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    const stockCards = document.getElementById('stockCards');
+    const searchInput = document.getElementById('searchInput');
+    const cartButton = document.createElement('button');
+   cartButton.className = 'fixed rounded-full shadow-lg z-80 hover:bg-blue-700 flex items-center justify-center';
+cartButton.style.width = '80px';
+cartButton.style.height = '80px';
+cartButton.style.backgroundColor = '#2563eb'; // blue-600
+cartButton.style.color = 'white';
+cartButton.style.transition = 'background-color 0.3s ease, box-shadow 0.3s ease';
+cartButton.style.boxShadow = '0 4px 8px rgba(37, 99, 235, 0.6)';
+cartButton.style.position = 'fixed';
+cartButton.style.right = '24px';
+cartButton.style.bottom = '80px';
+cartButton.style.display = 'flex';
+cartButton.style.alignItems = 'center';
+cartButton.style.justifyContent = 'center';
+cartButton.style.cursor = 'pointer';
+cartButton.style.padding = '0';
+
+cartButton.onmouseover = () => {
+  cartButton.style.backgroundColor = '#1d4ed8'; // blue-700
+  cartButton.style.boxShadow = '0 6px 12px rgba(29, 78, 216, 0.8)';
+};
+cartButton.onmouseout = () => {
+  cartButton.style.backgroundColor = '#2563eb'; // blue-600
+  cartButton.style.boxShadow = '0 4px 8px rgba(37, 99, 235, 0.6)';
+};
+cartButton.innerHTML = '<i class="fas fa-receipt" style="font-size: 28px;"></i>';
+
+const cartCountBadge = document.createElement('span');
+cartCountBadge.id = 'cartCountBadge';
+cartCountBadge.style.position = 'absolute';
+cartCountBadge.style.top = '4px';
+cartCountBadge.style.right = '4px';
+cartCountBadge.style.backgroundColor = 'white';
+cartCountBadge.style.color = '#2563eb'; // blue-600
+cartCountBadge.style.borderRadius = '50%';
+cartCountBadge.style.padding = '2px 6px';
+cartCountBadge.style.fontSize = '12px';
+cartCountBadge.style.fontWeight = 'bold';
+cartCountBadge.style.userSelect = 'none';
+cartCountBadge.textContent = '0';
+cartButton.appendChild(cartCountBadge);
+
+    document.body.appendChild(cartButton);
+
+    const cartModal = document.createElement('div');
+    cartModal.id = 'cartModal';
+    cartModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50';
+    cartModal.innerHTML = `
+      <div class="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-auto relative">
+        <h2 class="text-blue-600 text-xl font-bold mb-4">Carrinho</h2>
+        <ul id="cartItems" class="mb-4 space-y-2"></ul>
+        <div class="mb-4">
+          <label for="attendantInput" class="block font-semibold mb-1">Atendente:</label>
+          <input type="text" id="attendantInput" placeholder="Nome do atendente" class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div class="mb-4">
+          <label for="tableInput" class="block font-semibold mb-1">Mesa:</label>
+          <input type="text" id="tableInput" placeholder="Número da mesa" class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div class="mb-4">
+          <label for="notesInput" class="block font-semibold mb-1">Anotações:</label>
+          <textarea id="notesInput" placeholder="Anotações adicionais" rows="3" class="w-full border border-gray-300 rounded-md p-2"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button id="clearCartBtn" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400">Limpar Comanda</button>
+          <button id="finalizeCartBtn" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Adicionar a Comanda</button>
+          <button id="closeCartBtn" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400">Fechar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(cartModal);
+
+    document.getElementById('clearCartBtn').addEventListener('click', () => {
+      cart = [];
+      renderCart();
+      document.getElementById('attendantInput').value = '';
+      document.getElementById('tableInput').value = '';
+      document.getElementById('notesInput').value = '';
+    });
+
+    let cart = [];
+
+    function addToCart(key, piece, quantity = 1) {
+      const existingItem = cart.find(item => item.key === key);
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cart.push({ key, piece, quantity });
+      }
+      updateCartCount();
+      alert(`Produto "${piece.nome}" (quantidade: ${quantity}) adicionado ao carrinho.`);
+    }
+
+    function updateCartCount() {
+      const cartCountBadge = document.getElementById('cartCountBadge');
+      if (!cartCountBadge) return;
+      const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+      cartCountBadge.textContent = totalCount.toString();
+    }
+
+    function renderCart() {
+      const cartItems = document.getElementById('cartItems');
+      cartItems.innerHTML = '';
+      if (cart.length === 0) {
+        cartItems.innerHTML = '<li class="text-center text-gray-500">Carrinho vazio</li>';
+        return;
+      }
+      cart.forEach(({ key, piece, quantity }, index) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center border-b border-gray-300 pb-2';
+        li.innerHTML = `
+          <span>${piece.nome} (x${quantity})</span>
+          <button class="text-red-600 hover:text-red-800" data-index="${index}">&times;</button>
+        `;
+        cartItems.appendChild(li);
+      });
+      // Add event listeners for remove buttons
+      cartItems.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', e => {
+          const index = parseInt(e.target.getAttribute('data-index'));
+          cart.splice(index, 1);
+          renderCart();
+        });
+      });
+    }
+
+    cartButton.addEventListener('click', () => {
+      renderCart();
+      cartModal.classList.remove('hidden');
+    });
+
+    document.body.addEventListener('click', e => {
+      if (e.target.id === 'closeCartBtn') {
+        cartModal.classList.add('hidden');
+      }
+    });
+
+    document.body.addEventListener('click', e => {
+      if (e.target.id === 'finalizeCartBtn') {
+        if (cart.length === 0) {
+          alert('Carrinho vazio.');
+          return;
+        }
+        const attendant = document.getElementById('attendantInput').value.trim();
+        const table = document.getElementById('tableInput').value.trim();
+        const notes = document.getElementById('notesInput').value.trim();
+
+        if (!attendant || !table) {
+          alert('Por favor, preencha o atendente e a mesa.');
+          return;
+        }
+
+        const orderData = {
+          atendente: attendant,
+          mesa: table,
+          anotacoes: notes,
+          itens: cart,
+          dataPedido: new Date().toLocaleString('pt-BR', { hour12: false })
+        };
+
+        database.ref('comandas').push(orderData).then(() => {
+          alert('Comanda adicionada com sucesso!');
+          cart = [];
+          renderCart();
+          document.getElementById('attendantInput').value = '';
+          document.getElementById('tableInput').value = '';
+          document.getElementById('notesInput').value = '';
+          cartModal.classList.add('hidden');
+          renderStockCards();
+        }).catch(err => {
+          alert('Erro ao adicionar comanda: ' + err.message);
+        });
+      }
+    });
+
+    function createCard(key, piece) {
+      const card = document.createElement('div');
+      card.className = 'bg-white rounded-lg shadow p-4 flex flex-col space-y-4';
+      if (piece.quantidade === 1) card.classList.add('bg-red-500', 'text-white');
+      else if (piece.quantidade === 2) card.classList.add('bg-yellow-300');
+
+      const topDiv = document.createElement('div');
+      topDiv.className = 'flex flex-row items-center space-x-4';
+
+      const imageUrl = piece.imagem || '';
+      const imageElement = document.createElement('img');
+      imageElement.src = imageUrl;
+      imageElement.alt = piece.nome || 'Imagem do produto';
+      imageElement.className = 'w-24 h-24 object-cover rounded';
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'flex-1 flex flex-col';
+
+      infoDiv.innerHTML = `
+        <h3 class="text-lg font-semibold mb-1">${piece.nome}</h3>
+        ${piece.descricao ? `<p class="text-sm text-white mb-1">${piece.descricao}</p>` : ''}
+        ${piece.tipo ? `<p class="text-sm text-white mb-1">Tipo: ${piece.tipo}</p>` : ''}
+        ${piece.valor ? `<p class="text-sm text-white mb-1">Valor: R$ ${piece.valor}</p>` : ''}
+        ${piece.obs ? `<p class="text-sm text-white mb-1">Obs: ${piece.obs}</p>` : ''}
+        ${piece.codigoProduto ? `<p class="text-sm text-white mb-1">Código do Produto: ${piece.codigoProduto}</p>` : ''}
+      `;
+
+      topDiv.appendChild(imageElement);
+      topDiv.appendChild(infoDiv);
+
+      card.appendChild(topDiv);
+
+      const quantitySelect = document.createElement('select');
+      quantitySelect.className = 'border border-gray-300 rounded-md p-1 mb-2 w-20';
+      for (let i = 1; i <= 15; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        quantitySelect.appendChild(option);
+      }
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Adicionar a Comanda';
+      btn.className = 'bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 self-start';
+      btn.onclick = () => {
+        const selectedQuantity = parseInt(quantitySelect.value);
+        addToCart(key, piece, selectedQuantity);
+      };
+
+      card.appendChild(quantitySelect);
+      card.appendChild(btn);
+      return card;
+    }
+
+    function renderStockCards() {
+      database.ref('produtos').once('value').then(snapshot => {
+        const data = snapshot.val() || {};
+        const filter = searchInput.value.toLowerCase();
+        stockCards.innerHTML = '';
+        let foundAny = false;
+        Object.entries(data).forEach(([key, piece]) => {
+          if (!piece.nome.toLowerCase().includes(filter)) return;
+          stockCards.appendChild(createCard(key, piece));
+          foundAny = true;
+        });
+        if (!foundAny) {
+          const noResultMessage = document.createElement('p');
+          noResultMessage.textContent = 'Produto não encontrado. por favor, verificar se há produtos no estoque para cadastrar.';
+          noResultMessage.className = 'text-red-600 font-semibold text-center col-span-full';
+          stockCards.appendChild(noResultMessage);
+        }
+      });
+    }
+    searchInput.addEventListener('input', renderStockCards);
+
+    let currentSellKey = null;
+
+    function openSellModal(key, piece) {
+      currentSellKey = key;
+      currentSellPiece = piece;
+      const sellQuantitySelect = document.getElementById('sellQuantity');
+      sellQuantitySelect.innerHTML = ''; // Clear existing options
+      for (let i = 1; i <= piece.quantidade; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        sellQuantitySelect.appendChild(option);
+      }
+      sellQuantitySelect.value = 1;
+      document.getElementById('sellClient').value = '';
+      document.getElementById('paymentMethod').value = '';
+      const valorUnitario = (piece.valor ?? piece.valorEntrada ?? 0).toFixed(2);
+      document.getElementById('sellUnitPrice').value = valorUnitario;
+      document.getElementById('sellDetails').value = `Nome: ${piece.nome}\nQuantidade em estoque: ${piece.quantidade}\nValor unitário: R$ ${valorUnitario}${piece.codigoProduto ? `\nCódigo do Produto: ${piece.codigoProduto}` : ''}`;
+      sellModal.classList.remove('hidden');
+    }
+
+    document.getElementById('cancelSellBtn').onclick = () => sellModal.classList.add('hidden');
+    document.getElementById('paymentMethod').onchange = e => {
+      // Pix QR code toggle removed as per user request
+    };
+
+    document.getElementById('sellForm').onsubmit = e => {
+      e.preventDefault();
+      const qty = parseInt(document.getElementById('sellQuantity').value);
+      const client = document.getElementById('sellClient').value.trim();
+      const payment = document.getElementById('paymentMethod').value;
+      const unitPriceInput = parseFloat(document.getElementById('sellUnitPrice').value);
+
+      if (!qty || qty < 1 || !client || !payment || qty > currentSellPiece.quantidade || isNaN(unitPriceInput) || unitPriceInput < 0) {
+        alert('Verifique os dados preenchidos.');
+        return;
+      }
+
+      const vendaData = {
+        nome: currentSellPiece.nome,
+        quantidadeRetirada: qty,
+        cliente: client,
+        formaPagamento: payment,
+        valorUnitario: unitPriceInput,
+        dataVenda: new Date().toLocaleString('pt-BR', { hour12: false })
+      };
+
+      database.ref('vendas').push(vendaData).then(() => {
+        const novaQtd = currentSellPiece.quantidade - qty;
+        return database.ref(`produtos/${currentSellKey}`).update({ quantidade: novaQtd });
+      }).then(() => {
+        alert('Venda registrada com sucesso!');
+        sellModal.classList.add('hidden');
+        renderStockCards();
+      }).catch(err => alert('Erro: ' + err.message));
+    };
+
+    renderStockCards();
+  </script>
+  <!-- Bottom buttons with icons and cards like paginapricipal.html -->
+  <style>
+    .bottom-main-container {
+      background-color: #ffffff; /* Branco principal */
+      padding: 20px 40px;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 100%;
+      text-align: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+    }
+    .bottom-blocks-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .bottom-block {
+      width: 120px;
+      max-width: 120px;
+      margin: 0;
+      padding: 15px;
+      background-color: #0000ff; /* Amarelo */
+      border-radius: 8px;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff; /* Texto branco */
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .bottom-block i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #ffffff; /* Ícones brancos */
+    }
+    .bottom-block:hover {
+      background-color: #b36200; /* Tom mais claro de amarelo */
+    }
+    @media (max-width: 768px) {
+      .bottom-block {
+        width: 90px;
+        max-width: 90px;
+        padding: 10px;
+        font-size: 0.9rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .bottom-block {
+        width: 70px;
+        max-width: 70px;
+        padding: 8px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+
+  <footer class="bottom-main-container" style="display: flex; justify-content: center; gap: 20px; padding: 10px 0;">
+    <a href="areadogarcom.html" class="bottom-block" title="Área do Garçom" style="width: 60px; height: 60px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+      <i class="fas fa-user-tie" style="font-size: 1.8rem;"></i>
+    </a>
+    <a href="comandas.html" class="bottom-block" title="Comandas" style="width: 60px; height: 60px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+      <i class="fas fa-receipt" style="font-size: 1.8rem;"></i>
+    </a>
+    <a href="areadacozinha.html" class="bottom-block" title="Área da Cozinha" style="width: 60px; height: 60px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+      <i class="fas fa-utensils" style="font-size: 1.8rem;"></i>
+    </a>
+    <a href="mesas.html" class="bottom-block" title="Mesas" style="width: 60px; height: 60px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+      <i class="fas fa-chair" style="font-size: 1.8rem;"></i>
+    </a>
+    <a href="fluxodecaixa.html" class="bottom-block" title="Fluxo de Caixa" style="width: 60px; height: 60px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+      <i class="fas fa-cash-register" style="font-size: 1.8rem;"></i>
+    </a>
+    <a href="paginapricipal.html" class="bottom-block" title="Tela Inicial" style="width: 60px; height: 60px; padding: 0; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+      <i class="fas fa-home" style="font-size: 1.8rem;"></i>
+    </a>
+  </footer>
+</body>
+
+</html>
