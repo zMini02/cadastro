@@ -615,24 +615,12 @@ function getCards() {
   return Array.from(document.querySelectorAll('.card-comanda'));
 }
 
-function printComandaHtml(html) {
-  const printDiv = document.getElementById('print-comanda');
-  printDiv.innerHTML = html;
-  printDiv.style.display = 'block';
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => { printDiv.style.display = 'none'; }, 1000);
-  }, 500); // Delay maior para garantir renderização
-}
-
 function checkForNewCards() {
   const cards = getCards();
   const ids = cards.map(card => card.getAttribute('data-id'));
   const newIds = ids.filter(id => !lastIds.includes(id));
   if (newIds.length > 0) {
-    // Imprime apenas o primeiro novo card encontrado
-    const card = cards.find(c => c.getAttribute('data-id') === newIds[0]);
-    if (card) printComandaHtml(card.innerHTML);
+    window.print();
   }
   lastIds = ids;
 }
