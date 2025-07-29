@@ -615,20 +615,14 @@ function getCards() {
   return Array.from(document.querySelectorAll('.card-comanda'));
 }
 
-function extractComandaData(card) {
-  // Extraia os dados necessários do card para impressão
-  return {
-    id: card.getAttribute('data-id'),
-    html: card.innerHTML
-  };
-}
-
 function printComandaHtml(html) {
   const printDiv = document.getElementById('print-comanda');
   printDiv.innerHTML = html;
   printDiv.style.display = 'block';
-  window.print();
-  setTimeout(() => { printDiv.style.display = 'none'; }, 1000);
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => { printDiv.style.display = 'none'; }, 500);
+  }, 100); // Pequeno delay para garantir renderização
 }
 
 function checkForNewCards() {
@@ -644,7 +638,6 @@ function checkForNewCards() {
   lastIds = ids;
 }
 
-// Atualiza a cada 5 segundos
 setInterval(checkForNewCards, 5000);
 checkForNewCards();
 </script>
