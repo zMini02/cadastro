@@ -53,8 +53,6 @@
         width: 48mm;
         font-family: 'Courier New', Courier, monospace;
         font-size: 12px;
-        padding: 0;
-        margin: 0;
       }
     }
     #print-comanda {
@@ -65,7 +63,6 @@
       background: #fff;
       color: #000;
       padding: 8px;
-      border: 1px dashed #ccc;
     }
   </style>
   <link rel="shortcut icon" href="favicongrow.png" type="image/x-icon">
@@ -584,5 +581,72 @@ updateComandas();
       <i class="fas fa-home" style="font-size: 1.8rem;"></i>
     </a>
   </footer>
+  <style>
+@media print {
+  body * { visibility: hidden; }
+  #print-comanda, #print-comanda * { visibility: visible; }
+  #print-comanda {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 48mm;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+  }
+}
+#print-comanda {
+  display: none;
+  width: 48mm;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  background: #fff;
+  color: #000;
+  padding: 8px;
+}
+</style>
+
+<div id="print-comanda"></div>
+
+<script>
+let lastIds = [];
+
+function getCards() {
+  // Ajuste o seletor conforme sua estrutura de card/comanda
+  return Array.from(document.querySelectorAll('.card-comanda'));
+}
+
+function extractComandaData(card) {
+  // Extraia os dados necessários do card para impressão
+  return {
+    id: card.getAttribute('data-id'),
+    html: card.innerHTML
+  };
+}
+
+function printComandaHtml(html) {
+  const printDiv = document.getElementById('print-comanda');
+  printDiv.innerHTML = html;
+  printDiv.style.display = 'block';
+  window.print();
+  setTimeout(() => { printDiv.style.display = 'none'; }, 1000);
+}
+
+function checkForNewCards() {
+  const cards = getCards();
+  const ids = cards.map(card => card.getAttribute('data-id'));
+  const newIds = ids.filter(id => !lastIds.includes(id));
+  if (newIds.length > 0) {
+    newIds.forEach(id => {
+      const card = cards.find(c => c.getAttribute('data-id') === id);
+      if (card) printComandaHtml(card.innerHTML);
+    });
+  }
+  lastIds = ids;
+}
+
+// Atualiza a cada 5 segundos
+setInterval(checkForNewCards, 5000);
+checkForNewCards();
+</script>
 </body>
 </html>
